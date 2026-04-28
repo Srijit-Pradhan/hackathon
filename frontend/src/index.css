@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+/* General Sans from fontshare */
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Radiant Prompt Input — kinetic rotating gradient border
+   Uses CSS @property so the conic-gradient angle can be animated
+   ============================================================ */
+
+@property --radiant-rotation {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes radiant-rotate {
+  to { --radiant-rotation: 360deg; }
+}
+
+.radiant-input-wrapper {
+  --border-size: 2px;
+  --radiant-gradient: conic-gradient(
+    from var(--radiant-rotation) at 50% 50% in oklab,
+    oklch(0.63 0.2 251.22) 27%,
+    oklch(0.67 0.21 25.81) 33%,
+    oklch(0.9  0.19 93.93) 41%,
+    oklch(0.79 0.25 150.49) 49%,
+    oklch(0.63 0.2 251.22) 65%,
+    oklch(0.72 0.21 150.89) 93%,
+    oklch(0.63 0.2 251.22)
+  );
+  animation: radiant-rotate 5s infinite linear;
+  /* Override the global box-shadow: none so the glow renders */
+  box-shadow: none;
+}
+
+/* Soft outer glow */
+.radiant-input-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--border-size) * -1);
+  border-radius: inherit;
+  background: var(--radiant-gradient);
+  z-index: 0;
+  filter: blur(10px);
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+/* Sharp border — mask trick to show only the border ring */
+.radiant-input-border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--border-size);
+  background: var(--radiant-gradient);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: none;
+}
+
+/* TiltedCard — restore box-shadow on card image (global rule blocks it) */
+.tilted-card-img {
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18) !important;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-forest font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight leading-none;
+  }
+  
+  h1 {
+    font-size: clamp(40px, 8vw, 96px);
+  }
+  
+  /* Technical minimalist overrides */
+  * {
+    @apply border-grid/20;
+    box-shadow: none !important;
+  }
+  
+  img.blend-hover {
+    mix-blend-mode: luminosity;
+    opacity: 0.9;
+    transition: all 0.2s ease-out;
+  }
+  
+  img.blend-hover:hover {
+    mix-blend-mode: normal;
+    opacity: 1;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-forest text-paper px-6 py-3 font-mono text-xs tracking-widest uppercase transition-colors hover:bg-forest/90 border border-transparent;
+  }
+  
+  .btn-secondary {
+    @apply bg-transparent text-forest px-6 py-3 font-mono text-xs tracking-widest uppercase transition-colors hover:bg-grid/5 border border-grid/20;
+  }
+  
+  .card {
+    @apply bg-white border border-grid/20 p-6;
+  }
+  
+  .input-field {
+    @apply bg-transparent border border-grid/20 px-4 py-3 w-full font-mono text-sm focus:outline-none focus:border-forest transition-colors;
+  }
+  
+  .tech-label {
+    @apply font-mono text-[10px] uppercase tracking-widest text-grid/60;
+  }
+  
+  .badge {
+    @apply inline-block px-2 py-1 font-mono text-[10px] uppercase tracking-widest border border-grid/20;
+  }
+
+  /* Custom scrollbar for timeline */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-grid/20;
+    border-radius: 2px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-grid/40;
+  }
+
+  /* Responsive table helper */
+  .table-responsive {
+    @apply w-full overflow-x-auto;
+  }
+}
