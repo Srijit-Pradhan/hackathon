@@ -9,6 +9,7 @@ import { RadiantPromptInput } from '../components/RadiantPromptInput';
 import { GenerateButton } from '../components/GenerateButton';
 import { AnimatedList } from '../components/AnimatedList';
 import { GlowingEdgeCard } from '../components/GlowingEdgeCard';
+import { apiUrl, SOCKET_URL } from '../config/api';
 
 export default function IncidentDetail() {
   const { id } = useParams();
@@ -33,7 +34,7 @@ export default function IncidentDetail() {
 
     const fetchIncident = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/incidents/${id}`);
+        const res = await axios.get(apiUrl(`/api/incidents/${id}`));
         setIncident(res.data);
         setStatus(res.data.status);
       } catch (err) {
@@ -46,11 +47,11 @@ export default function IncidentDetail() {
     fetchIncident();
 
     // Fetch all incidents for quick-nav
-    axios.get('http://localhost:5000/api/incidents')
+    axios.get(apiUrl('/api/incidents'))
       .then(res => setAllIncidents(res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))))
       .catch(() => {});
     // Socket setup
-    socketRef.current = io('http://localhost:5000');
+    socketRef.current = io(SOCKET_URL);
     socketRef.current.emit('joinIncident', id);
 
     socketRef.current.on('incidentUpdated', (updatedInc) => {
@@ -74,7 +75,7 @@ export default function IncidentDetail() {
   const handleUpdateStatus = async (newStatus) => {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      await axios.put(`http://localhost:5000/api/incidents/${id}`, { status: newStatus }, config);
+      await axios.put(apiUrl(`/api/incidents/${id}`), { status: newStatus }, config);
       // Socket will handle the state update
     } catch (err) {
       console.error('Error updating status:', err);
@@ -86,7 +87,7 @@ export default function IncidentDetail() {
     try {
       setAiLoading(true);
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      await axios.post(`http://localhost:5000/api/incidents/${id}/summarize`, {}, config);
+      await axios.post(apiUrl(`/api/incidents/${id}/summarize`), {}, config);
       // Socket handles the update
     } catch (err) {
       console.error('Error generating AI summary:', err);
@@ -184,7 +185,7 @@ export default function IncidentDetail() {
                 try {
                   const config = { headers: { Authorization: `Bearer ${user.token}` } };
                   await axios.post(
-                    `http://localhost:5000/api/incidents/${id}/timeline`,
+                    apiUrl(`/api/incidents/${id}/timeline`),
                     { update: text },
                     config
                   );

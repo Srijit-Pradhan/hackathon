@@ -8,6 +8,7 @@ import { AnimatedStepper, Step } from '../components/AnimatedStepper';
 import { RollingCounter } from '../components/RollingCounter';
 import { AnimatedList } from '../components/AnimatedList';
 import { RadiantPromptInput } from '../components/RadiantPromptInput';
+import { apiUrl } from '../config/api';
 
 // Simple debounce hook
 function useDebounce(value, delay) {
@@ -49,7 +50,7 @@ export default function Dashboard() {
 
   const fetchIncidents = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/incidents');
+      const res = await axios.get(apiUrl('/api/incidents'));
       const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setIncidents(sorted);
     } catch (err) {
@@ -72,7 +73,7 @@ export default function Dashboard() {
     }
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const res = await axios.post('http://localhost:5000/api/incidents', {
+      const res = await axios.post(apiUrl('/api/incidents'), {
         title, description, severity
       }, config);
       setIncidents([res.data, ...incidents]);

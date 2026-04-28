@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { format } from 'date-fns';
 import { Activity } from 'lucide-react';
 import { MagicBento } from '../components/MagicBento';
+import { apiUrl, SOCKET_URL } from '../config/api';
 
 export default function StatusPage() {
   const [incidents, setIncidents] = useState([]);
@@ -12,7 +13,7 @@ export default function StatusPage() {
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/incidents');
+        const res = await axios.get(apiUrl('/api/incidents'));
         const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setIncidents(sorted);
       } catch (err) {
@@ -24,7 +25,7 @@ export default function StatusPage() {
 
     fetchIncidents();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(SOCKET_URL);
     socket.on('incidentListUpdated', (updatedInc) => {
       setIncidents(prev => prev.map(inc => inc._id === updatedInc._id ? updatedInc : inc));
     });

@@ -4,6 +4,7 @@ import useStore from '../store/useStore';
 import { format } from 'date-fns';
 import { Trash2, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { RollingCounter } from '../components/RollingCounter';
+import { apiUrl } from '../config/api';
 
 export default function AdminPanel() {
   const { user } = useStore();
@@ -19,8 +20,8 @@ export default function AdminPanel() {
     const fetchData = async () => {
       try {
         const [usersRes, incidentsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/admin/users', authConfig),
-          axios.get('http://localhost:5000/api/admin/incidents', authConfig),
+          axios.get(apiUrl('/api/admin/users'), authConfig),
+          axios.get(apiUrl('/api/admin/incidents'), authConfig),
         ]);
         setUsers(usersRes.data);
         setIncidents(incidentsRes.data);
@@ -38,7 +39,7 @@ export default function AdminPanel() {
     if (!confirm(`Are you sure you want to delete user "${userName}"?`)) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, authConfig);
+      await axios.delete(apiUrl(`/api/admin/users/${userId}`), authConfig);
       setUsers((prev) => prev.filter((u) => u._id !== userId));
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete user');

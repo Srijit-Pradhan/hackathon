@@ -4,6 +4,7 @@ import axios from 'axios';
 import useStore from '../store/useStore';
 import { TiltedCard } from '../components/TiltedCard';
 import { ShieldAlert } from 'lucide-react';
+import { apiUrl } from '../config/api';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -16,7 +17,7 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', {
+      const res = await axios.post(apiUrl('/api/auth/register'), {
         name, email, password, role: 'responder'
       });
       setUser(res.data);

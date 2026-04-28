@@ -4,6 +4,7 @@ import axios from 'axios';
 import useStore from '../store/useStore';
 import { TiltedCard } from '../components/TiltedCard';
 import { ShieldAlert } from 'lucide-react';
+import { apiUrl } from '../config/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const res = await axios.post(apiUrl('/api/auth/login'), { email, password });
       setUser(res.data);
       navigate('/');
     } catch (err) {
