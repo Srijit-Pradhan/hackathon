@@ -34,7 +34,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       password,
-      role: role || 'user'
+      role: role || 'viewer'
     });
 
     if (user) {

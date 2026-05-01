@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import useStore from '../store/useStore';
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
   // Create incident state
   const [showCreate, setShowCreate] = useState(false);
@@ -48,21 +49,21 @@ export default function Dashboard() {
     }
   };
 
-  const fetchIncidents = useCallback(async () => {
-    try {
-      const res = await axios.get(apiUrl('/api/incidents'));
-      const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setIncidents(sorted);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching incidents');
-    } finally {
-      setLoading(false);
-    }
-  }, [setIncidents]);
-
   useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const res = await axios.get(apiUrl('/api/incidents'));
+        const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setIncidents(sorted);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Error fetching incidents');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchIncidents();
-  }, [fetchIncidents]);
+  }, [setIncidents]);
 
   // Called when the stepper completes
   const handleCreate = async () => {
@@ -98,6 +99,12 @@ export default function Dashboard() {
 
   // Filter incidents
   const filteredIncidents = incidents.filter((inc) => {
+    // Tab filter first
+    if (activeTab === 'mine') {
+      const assignedId = inc.assignedTo?._id || inc.assignedTo;
+      if (!assignedId || assignedId.toString() !== user?._id?.toString()) return false;
+    }
+    // Then search
     if (!debouncedSearch) return true;
     const q = debouncedSearch.toLowerCase();
     return (
@@ -107,6 +114,11 @@ export default function Dashboard() {
       inc.status.toLowerCase().includes(q)
     );
   });
+
+  const myTasksCount = incidents.filter(inc => {
+    const assignedId = inc.assignedTo?._id || inc.assignedTo;
+    return assignedId && assignedId.toString() === user?._id?.toString();
+  }).length;
 
   // ── Stats computed from incident data ────────────────────────────────────────
   const stats = {
@@ -129,6 +141,48 @@ export default function Dashboard() {
         >
           {showCreate ? 'Cancel' : '+ New Incident'}
         </button>
+      </div>
+
+      {/* ── Tab Switcher ─────────────────────────────────────────────────── */}
+      <div className="flex gap-1 mb-6 border-b border-grid/10 pb-0">
+        {[
+          { key: 'all',  label: 'All Incidents', count: incidents.length },
+          { key: 'mine', label: 'My Tasks',       count: myTasksCount },
+        ].map(({ key, label, count }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className="font-mono text-xs uppercase tracking-widest px-4 py-2 transition-all relative"
+            style={{
+              color: activeTab === key ? '#1A3C2B' : 'rgba(58,58,56,0.45)',
+              fontWeight: activeTab === key ? 700 : 400,
+              borderBottom: activeTab === key ? '2px solid #1A3C2B' : '2px solid transparent',
+              marginBottom: '-1px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === key ? '2px solid #1A3C2B' : '2px solid transparent',
+              cursor: 'pointer',
+            }}
+          >
+            {label}
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginLeft: '6px',
+              background: activeTab === key ? '#1A3C2B' : 'rgba(58,58,56,0.1)',
+              color: activeTab === key ? '#9EFFBF' : 'rgba(58,58,56,0.5)',
+              borderRadius: '999px',
+              fontSize: '10px',
+              minWidth: '18px',
+              height: '18px',
+              padding: '0 5px',
+              fontWeight: 700,
+            }}>
+              {count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {error && (
@@ -278,7 +332,15 @@ export default function Dashboard() {
       {/* ── Incidents: AnimatedList (compact) + full cards ──────────────────── */}
       {filteredIncidents.length === 0 ? (
         <div className="card text-center py-12 text-grid/60 font-mono">
-          {searchQuery ? 'No incidents match your search.' : 'No active incidents found.'}
+          {activeTab === 'mine' ? (
+            <div>
+              <div className="text-3xl mb-3">✓</div>
+              <div className="font-bold text-forest mb-1">No tasks assigned to you yet</div>
+              <div className="text-xs text-grid/40">When an admin or creator assigns you to an incident, it will appear here.</div>
+            </div>
+          ) : (
+            searchQuery ? 'No incidents match your search.' : 'No active incidents found.'
+          )}
         </div>
       ) : (
         <div className="grid md:grid-cols-[280px_1fr] gap-6 items-start">
@@ -312,10 +374,16 @@ export default function Dashboard() {
                   <span className={`badge ${getStatusColor(inc.status)}`}>{inc.status}</span>
                 </div>
                 <p className="text-grid/80 mb-4 line-clamp-2 text-sm md:text-base">{inc.description}</p>
-                <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-grid/60">
+                <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-grid/60 mt-4">
                   <span>Severity: <span className="text-grid/80">{inc.severity}</span></span>
                   <span>•</span>
                   <span>{format(new Date(inc.createdAt), 'MMM d, yyyy HH:mm')}</span>
+                  {inc.assignedTo && (
+                    <>
+                      <span>•</span>
+                      <span>Assigned to: <span className="text-forest">{inc.assignedTo.name}</span></span>
+                    </>
+                  )}
                 </div>
               </Link>
             ))}

@@ -7,7 +7,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="border-t border-grid/20 py-6 text-center font-mono text-[10px] uppercase tracking-widest text-grid/60">
-        Hackathon Project • Smart Incident Response
+        incidentIQ • Hackathon 2026
       </footer>
     </div>
   );

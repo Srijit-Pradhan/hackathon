@@ -9,15 +9,9 @@
  * - Replaces the traditional Navbar on LandingPage
  */
 
-import React, {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useEffect,
-} from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { Globe, ShieldAlert } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
@@ -237,7 +231,7 @@ export function StaggeredMenu({
 
     openTlRef.current = tl;
     return tl;
-  }, [position]);
+  }, []);
 
   // ── Play open ─────────────────────────────────────────────────────────────
   const playOpen = useCallback(() => {

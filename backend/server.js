@@ -27,9 +27,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Basic Route
+// Basic Route — v4
 app.get('/', (req, res) => {
-  res.send('Smart Incident Response API is running...');
+  res.send('Smart Incident Response API v4');
 });
 
 // Routes
@@ -40,6 +40,13 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 // Socket.io connection
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
+
+  // Each logged-in user joins their personal room so we can
+  // emit targeted events (e.g. youAreAssigned) to them.
+  socket.on('joinUserRoom', (userId) => {
+    socket.join(`user:${userId}`);
+    console.log(`Socket ${socket.id} joined personal room: user:${userId}`);
+  });
 
   socket.on('joinIncident', (incidentId) => {
     socket.join(incidentId);

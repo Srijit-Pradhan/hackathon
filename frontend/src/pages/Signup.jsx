@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import useStore from '../store/useStore';
@@ -12,16 +12,22 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { setUser } = useStore();
+  const { user, setUser } = useStore();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(apiUrl('/api/auth/register'), {
-        name, email, password, role: 'responder'
+        name, email, password
       });
       setUser(res.data);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed');
     }
@@ -34,8 +40,8 @@ export default function Signup() {
       <div className="hidden md:flex flex-col items-center justify-center flex-1 gap-6 py-8">
         <TiltedCard
           imageSrc="/card-visual.png"
-          altText="Smart Incident Response Platform"
-          captionText="Smart Incident Response"
+          altText="incidentIQ"
+          captionText="incidentIQ"
           containerHeight="360px"
           containerWidth="320px"
           imageHeight="320px"
@@ -73,7 +79,7 @@ export default function Signup() {
       {/* ── Right: Signup form ── */}
       <div className="flex-1 max-w-sm w-full">
         <h2 className="text-3xl mb-2">Sign Up</h2>
-        <p className="tech-label mb-8">Create a responder account</p>
+        <p className="tech-label mb-8">Create an account</p>
 
         {error && (
           <div className="bg-coral/10 text-coral p-3 mb-4 font-mono text-sm border border-coral/20">

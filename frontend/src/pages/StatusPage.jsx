@@ -3,7 +3,6 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { format } from 'date-fns';
 import { Activity } from 'lucide-react';
-import { MagicBento } from '../components/MagicBento';
 import { apiUrl, SOCKET_URL } from '../config/api';
 
 export default function StatusPage() {
@@ -76,42 +75,22 @@ export default function StatusPage() {
                   <div>
                     <h3 className="text-2xl mb-1">{inc.title}</h3>
                     <div className="text-sm font-mono text-grid/60">
-                      {format(new Date(inc.createdAt), 'MMM d, yyyy HH:mm')}
+                      {format(new Date(inc.timeline?.length > 0 ? inc.timeline[inc.timeline.length - 1].timestamp : inc.createdAt), 'MMM d, yyyy HH:mm')}
                     </div>
                   </div>
                   <div className={`px-3 py-1 font-mono text-xs uppercase tracking-widest ${getStatusColor(inc.status)}`}>
                     {inc.status}
                   </div>
                 </div>
-                <p className="text-grid/80">{inc.description}</p>
-                {inc.aiSummary && (
-                  <div className="mt-4 p-4 bg-paper border border-grid/10 text-sm">
-                    <strong className="font-mono text-[10px] uppercase tracking-widest text-forest block mb-1">Postmortem Summary</strong>
-                    <p className="text-grid/90">{inc.aiSummary}</p>
-                  </div>
-                )}
+                <p className="text-grid/80">
+                  {inc.timeline?.length > 0 ? inc.timeline[inc.timeline.length - 1].update : 'No updates yet.'}
+                </p>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* ── Platform Capabilities — MagicBento ── */}
-      <div className="mt-16">
-        <h2 className="text-2xl border-b border-grid/20 pb-2 mb-4">Platform Capabilities</h2>
-        <MagicBento
-          enableStars={true}
-          enableSpotlight={true}
-          enableBorderGlow={true}
-          enableTilt={true}
-          enableMagnetism={true}
-          clickEffect={true}
-          spotlightRadius={260}
-          particleCount={10}
-          glowColor="247, 247, 245"
-          textAutoHide={false}
-        />
-      </div>
     </div>
   );
 }

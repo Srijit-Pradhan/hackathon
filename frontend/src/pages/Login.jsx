@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import useStore from '../store/useStore';
@@ -11,14 +11,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { setUser } = useStore();
+  const { user, setUser } = useStore();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(apiUrl('/api/auth/login'), { email, password });
       setUser(res.data);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }
@@ -31,8 +37,8 @@ export default function Login() {
       <div className="hidden md:flex flex-col items-center justify-center flex-1 gap-6 py-8">
         <TiltedCard
           imageSrc="/card-visual.png"
-          altText="Smart Incident Response Platform"
-          captionText="Smart Incident Response"
+          altText="incidentIQ"
+          captionText="incidentIQ"
           containerHeight="360px"
           containerWidth="320px"
           imageHeight="320px"
@@ -54,7 +60,7 @@ export default function Login() {
             >
               <ShieldAlert className="w-4 h-4 text-mint shrink-0" />
               <span className="font-mono text-xs uppercase tracking-widest text-mint">
-                Incident Response
+                incidentIQ
               </span>
             </div>
           }

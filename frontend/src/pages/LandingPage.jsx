@@ -12,7 +12,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShieldAlert } from 'lucide-react';
-import { StaggeredMenu } from '../components/StaggeredMenu';
 import { RadiantPromptInput } from '../components/RadiantPromptInput';
 import { MagicBento } from '../components/MagicBento';
 import { TiltedCard } from '../components/TiltedCard';
@@ -33,7 +32,6 @@ const FEATURE_CARDS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [aiDemo, setAiDemo] = useState(false);
   const [heroSearch, setHeroSearch] = useState('');  // controlled input state
 
   // Navigate to dashboard — with or without a search query
@@ -42,44 +40,8 @@ export default function LandingPage() {
     navigate(q ? `/dashboard?q=${encodeURIComponent(q)}` : '/dashboard');
   };
 
-  // ── StaggeredMenu navigation items (mirrors the Navbar links) ────────────
-  const menuItems = [
-    { label: 'Dashboard', ariaLabel: 'Go to dashboard', link: '/dashboard' },
-    { label: 'Status',    ariaLabel: 'View status page', link: '/status' },
-    { label: 'Login',     ariaLabel: 'Login to your account', link: '/login' },
-    { label: 'Sign Up',   ariaLabel: 'Create an account', link: '/signup' },
-  ];
-
-  const socialLinks = [
-    { label: 'GitHub',    link: 'https://github.com' },
-    { label: 'Twitter',   link: 'https://twitter.com' },
-    { label: 'LinkedIn',  link: 'https://linkedin.com' },
-  ];
-
   return (
     <div className="min-h-screen bg-paper text-forest">
-
-      {/* ══ STAGGERED MENU — fixed overlay, replaces Navbar on landing ══ */}
-      <StaggeredMenu
-        isFixed
-        position="right"
-        items={menuItems}
-        socialItems={socialLinks}
-        displayItemNumbering
-        colors={['#1A3C2B', '#2d5540', '#F7F7F5']}
-        accentColor="#9EFFBF"
-        menuButtonColor="#1A3C2B"
-        logo={
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-forest font-display font-bold text-lg"
-          >
-            <ShieldAlert className="w-5 h-5" />
-            <span className="hidden sm:inline">IncidentResponse</span>
-            <span className="sm:hidden">IR</span>
-          </Link>
-        }
-      />
 
       {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
       <section className="max-w-4xl mx-auto px-6 md:px-12 pt-24 pb-16 text-center lp-section">
@@ -90,8 +52,7 @@ export default function LandingPage() {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold leading-[1.05] tracking-tight mb-5">
-          Smart Incident<br />
-          <span className="text-forest/35">Response Platform</span>
+          incident<span className="text-forest">IQ</span>
         </h1>
 
         <p className="text-lg text-grid/65 max-w-xl mx-auto mb-10 leading-relaxed">
@@ -124,7 +85,7 @@ export default function LandingPage() {
         {/* TiltedCard wrapping the dashboard preview screenshot */}
         <TiltedCard
           imageSrc="/dashboard-preview.png"
-          altText="Smart Incident Response Platform Dashboard"
+          altText="incidentIQ Dashboard"
           captionText="Live Dashboard"
           containerHeight="460px"
           containerWidth="100%"
@@ -234,41 +195,71 @@ export default function LandingPage() {
           >
             <Step title="1 · Create Incident">
               <p className="text-sm leading-relaxed mb-4">
-                Log a new incident with a title, description, and severity level.
-                Use the 3-step wizard to capture all the details quickly.
+                Log a new incident with title, description, and severity level.
+                Example: Payment API Failure.
               </p>
               <div className="p-4 border border-forest/10 bg-forest/3 font-mono text-xs text-grid/60">
                 <span className="text-forest">POST</span> /api/incidents → <span className="text-mint">201 Created</span>
               </div>
             </Step>
 
-            <Step title="2 · Investigate">
+            <Step title="2 · Assign Responder">
               <p className="text-sm leading-relaxed mb-4">
-                Your team posts live timeline updates. Every update is broadcast
-                in real-time via WebSocket to all connected responders.
+                Assign team members to take responsibility. A timeline update is instantly broadcasted.
+                No confusion on who is investigating.
               </p>
               <div className="p-4 border border-gold/20 bg-gold/5 text-xs font-mono text-grid/70">
-                <span className="text-gold">●</span> Investigating · 3 updates · 2 responders online
+                <span className="text-gold">●</span> Assigned to Srijit (Backend Team)
               </div>
             </Step>
 
-            <Step title="3 · Resolve">
+            <Step title="3 · Investigate">
               <p className="text-sm leading-relaxed mb-4">
-                Mark the incident resolved when the issue is fixed.
-                The status page updates automatically so stakeholders stay informed.
+                Team posts live timeline updates while debugging. The system builds a real-time timeline
+                so everyone stays on the same page.
               </p>
-              <div className="p-4 border border-mint/20 bg-mint/5 text-xs font-mono text-grid/70">
-                <span className="text-mint">✓</span> Resolved · Total duration: 43 minutes
+              <div className="p-4 border border-grid/20 bg-paper text-xs font-mono text-grid/70">
+                <span className="text-forest">●</span> Investigating payment service logs...
               </div>
             </Step>
 
-            <Step title="4 · Generate AI Summary">
+            <Step title="4 · AI Summary">
               <p className="text-sm leading-relaxed mb-4">
-                One click generates a full postmortem: root-cause analysis,
-                timeline, impact assessment, and recommended preventive actions.
+                Click a button and AI analyzes the timeline to provide a quick summary and probable root cause.
+                No need to read all logs manually.
               </p>
               <div className="p-4 border border-forest/15 bg-forest/4 text-xs font-mono text-grid/60">
-                <span className="text-forest">✦</span> Gemini AI · Summary ready in ~3 seconds
+                <span className="text-forest">✦</span> Root Cause: DB connection timeout due to traffic spike
+              </div>
+            </Step>
+
+            <Step title="5 · Resolve Incident">
+              <p className="text-sm leading-relaxed mb-4">
+                Once the fix is applied (e.g. optimized queries + scaling), change the status to Resolved.
+                Timeline reflects the resolution.
+              </p>
+              <div className="p-4 border border-mint/20 bg-mint/5 text-xs font-mono text-grid/70">
+                <span className="text-mint">✓</span> Incident resolved · System stable
+              </div>
+            </Step>
+
+            <Step title="6 · Postmortem">
+              <p className="text-sm leading-relaxed mb-4">
+                System provides a complete AI-generated postmortem with summary, root cause, and
+                steps taken, ready to be reviewed to prevent future issues.
+              </p>
+              <div className="p-4 border border-forest/15 bg-forest/4 text-xs font-mono text-grid/60">
+                <span className="text-forest">✦</span> Postmortem generated successfully
+              </div>
+            </Step>
+
+            <Step title="7 · Status Page">
+              <p className="text-sm leading-relaxed mb-4">
+                Stakeholders check the public status page to see transparent updates.
+                Builds trust and keeps users informed of system health.
+              </p>
+              <div className="p-4 border border-mint/20 bg-mint/5 text-xs font-mono text-grid/70">
+                <span className="text-mint">✓</span> All Systems Operational
               </div>
             </Step>
           </AnimatedStepper>
@@ -287,7 +278,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-4">
             <GenerateButton
               onClick={() => navigate('/dashboard')}
-              isLoading={aiDemo}
+              isLoading={false}
               idleText="Open Dashboard"
               loadingText="Loading..."
               disabled={false}
@@ -301,7 +292,7 @@ export default function LandingPage() {
 
       {/* ══ FOOTER (matches Layout footer) ════════════════════════════════ */}
       <footer className="border-t border-grid/20 py-6 text-center font-mono text-[10px] uppercase tracking-widest text-grid/60">
-        Hackathon Project • Smart Incident Response
+        incidentIQ • Hackathon 2026
       </footer>
 
       {/* Subtle fade-in for each section */}

@@ -48,7 +48,6 @@ export function RadiantPromptInput({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          disabled={disabled}
           className="flex-1 bg-transparent border-none outline-none text-forest placeholder:text-grid/40 font-mono text-sm w-full min-w-0"
         />
 

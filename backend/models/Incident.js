@@ -26,10 +26,14 @@ const incidentSchema = new mongoose.Schema({
     enum: ['Low', 'Medium', 'High', 'Critical'],
     default: 'Medium'
   },
-  assignedUsers: [{
+  assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }],
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   timeline: [updateSchema],
   aiSummary: {
     type: String,

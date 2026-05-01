@@ -1,4 +1,5 @@
 const Incident = require('../models/Incident');
+const mongoose = require('mongoose');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // -----------------------------------------------------------
@@ -15,8 +16,6 @@ const CACHE_TTL_MS = 30 * 1000; // 30 seconds
 // Fallback summary generator (when API quota is exceeded)
 // -----------------------------------------------------------
 function generateFallbackSummary(incident) {
-  // Extract key information from timeline
-  const timelineUpdates = incident.timeline.map(t => t.update);
   const startTime = incident.timeline[0]?.timestamp || incident.createdAt;
   const endTime = incident.timeline[incident.timeline.length - 1]?.timestamp || new Date();
   const durationMinutes = Math.round((new Date(endTime) - new Date(startTime)) / 60000);
@@ -41,6 +40,21 @@ function clearIncidentsCache() {
   cache.expiresAt = 0;
 }
 
+async function respondWithFallback(res, req, incident, payload) {
+  const { summary, rootCause } = generateFallbackSummary(incident);
+  incident.aiSummary = summary;
+  incident.aiRootCause = rootCause;
+  await incident.save();
+
+  req.io.to(req.params.id).emit('incidentUpdated', incident);
+
+  return res.status(200).json({
+    incident,
+    ...payload,
+    usingFallback: true,
+  });
+}
+
 // @desc    Get all incidents
 // @route   GET /api/incidents
 // @access  Private
@@ -51,7 +65,7 @@ const getIncidents = async (req, res) => {
       return res.json(cache.data);
     }
 
-    const incidents = await Incident.find({}).populate('assignedUsers', 'name email');
+    const incidents = await Incident.find({}).populate('assignedTo createdBy', 'name email role');
 
     // Store in cache
     cache.data = incidents;
@@ -68,7 +82,7 @@ const getIncidents = async (req, res) => {
 // @access  Private
 const getIncidentById = async (req, res) => {
   try {
-    const incident = await Incident.findById(req.params.id).populate('assignedUsers', 'name email');
+    const incident = await Incident.findById(req.params.id).populate('assignedTo createdBy', 'name email role');
     if (incident) {
       res.json(incident);
     } else {
@@ -95,6 +109,7 @@ const createIncident = async (req, res) => {
       title,
       description,
       severity,
+      createdBy: req.user._id,
       timeline: [{
         update: 'Incident created.',
         author: req.user._id,
@@ -104,40 +119,162 @@ const createIncident = async (req, res) => {
 
     const createdIncident = await incident.save();
 
-    // Invalidate cache so next GET fetches fresh data
     clearIncidentsCache();
 
-    // Broadcast new incident
-    req.io.emit('incidentCreated', createdIncident);
+    const populatedIncident = await Incident.findById(createdIncident._id).populate('assignedTo createdBy', 'name email role');
+    req.io.emit('incidentCreated', populatedIncident);
 
-    res.status(201).json(createdIncident);
+    res.status(201).json(populatedIncident);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Update incident (status, assignments)
+// @desc    Update incident (status and/or assignment)
 // @route   PUT /api/incidents/:id
 // @access  Private
 const updateIncident = async (req, res) => {
   try {
-    const { status, assignedUsers } = req.body;
+    const { status, assignedTo, assignedToName } = req.body;
+    const incident = await Incident.findById(req.params.id).lean();
+
+    if (!incident) return res.status(404).json({ message: 'Incident not found' });
+
+    const isAdmin = req.user.role === 'admin';
+    const isCreator = !incident.createdBy || incident.createdBy.toString() === req.user._id.toString();
+    const isAssigned = incident.assignedTo && incident.assignedTo.toString() === req.user._id.toString();
+
+    const setFields = {};
+    const timelineEntries = [];
+
+    // Handle assignedTo change — admin or creator only
+    if (assignedTo) {
+      if (!isAdmin && !isCreator) {
+        return res.status(403).json({ message: 'Not authorized to assign responders' });
+      }
+      // Cast to ObjectId so Mongoose .populate() works correctly.
+      // The native collection.updateOne() stores values as-is (no schema casting),
+      // so a plain string would break populate.
+      try {
+        setFields.assignedTo = new mongoose.Types.ObjectId(assignedTo);
+      } catch {
+        return res.status(400).json({ message: 'Invalid user ID for assignedTo' });
+      }
+      timelineEntries.push({
+        update: `Assigned to ${assignedToName || 'a responder'}`,
+        author: req.user._id,
+        authorName: req.user.name,
+        timestamp: new Date()
+      });
+    }
+
+    // Handle status change — admin, creator, or assigned
+    if (status && status !== incident.status) {
+      if (!isAdmin && !isCreator && !isAssigned) {
+        return res.status(403).json({ message: 'Not authorized to change status' });
+      }
+      setFields.status = status;
+      timelineEntries.push({
+        update: `Status changed to ${status}`,
+        author: req.user._id,
+        authorName: req.user.name,
+        timestamp: new Date()
+      });
+    }
+
+    // Build the raw MongoDB update operation
+    const updateOp = {};
+    if (Object.keys(setFields).length > 0) updateOp.$set = setFields;
+    if (timelineEntries.length > 0) updateOp.$push = { timeline: { $each: timelineEntries } };
+
+    if (Object.keys(updateOp).length === 0) {
+      // Nothing to update — return current state
+      const current = await Incident.findById(req.params.id).populate('assignedTo', 'name email role');
+      return res.json(current);
+    }
+
+    // Use native MongoDB driver to bypass ALL Mongoose processing on old documents
+    await Incident.collection.updateOne(
+      { _id: incident._id },
+      updateOp
+    );
+
+    clearIncidentsCache();
+
+    const populated = await Incident.findById(req.params.id).populate('assignedTo createdBy', 'name email role');
+    req.io.to(req.params.id).emit('incidentUpdated', populated);
+    req.io.emit('incidentListUpdated', populated);
+    // Emit targeted notification to the assigned user's personal room
+    req.io.to(`user:${assignedTo}`).emit('youAreAssigned', {
+      incidentId: req.params.id,
+      incidentTitle: incident.title,
+      assignedBy: req.user.name,
+      timestamp: new Date()
+    });
+
+    res.json(populated);
+  } catch (error) {
+    console.error('updateIncident error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// @desc    Assign a responder to an incident
+// @route   PUT /api/incidents/:id/assign
+// @access  Private
+const assignUser = async (req, res) => {
+  try {
+    const { userId, userName } = req.body;
     const incident = await Incident.findById(req.params.id);
 
     if (incident) {
-      if (status) incident.status = status;
-      if (assignedUsers) incident.assignedUsers = assignedUsers;
+      // Permission: admin | creator
+      const isCreator = !incident.createdBy || incident.createdBy.toString() === req.user._id.toString();
+      if (req.user.role !== 'admin' && !isCreator) {
+        return res.status(403).json({ message: 'Not authorized to assign responders' });
+      }
 
-      const updatedIncident = await incident.save();
+      const timelineEntry = {
+        update: `Assigned to ${userName}`,
+        author: req.user._id,
+        authorName: req.user.name,
+        timestamp: new Date()
+      };
 
-      // Invalidate cache
+      // Cast to ObjectId so .populate() works correctly.
+      // Saving a plain string breaks population on the subsequent GET.
+      let assignedObjectId;
+      try {
+        assignedObjectId = new mongoose.Types.ObjectId(userId);
+      } catch {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      // Use native driver to bypass strict schema validation on old documents
+      await Incident.collection.updateOne(
+        { _id: incident._id },
+        {
+          $set: { assignedTo: assignedObjectId },
+          $push: { timeline: timelineEntry }
+        }
+      );
+
       clearIncidentsCache();
 
-      // Broadcast update
-      req.io.to(req.params.id).emit('incidentUpdated', updatedIncident);
-      req.io.emit('incidentListUpdated', updatedIncident);
+      const populated = await Incident.findById(req.params.id).populate('assignedTo createdBy', 'name email role');
 
-      res.json(updatedIncident);
+      // Emit targeted notification to the newly assigned user
+      req.io.to(`user:${assignedObjectId}`).emit('youAreAssigned', {
+        incidentId: req.params.id,
+        incidentTitle: incident.title,
+        assignedBy: req.user.name,
+        timestamp: new Date()
+      });
+
+      req.io.to(req.params.id).emit('incidentUpdated', populated);
+      req.io.emit('incidentListUpdated', populated);
+      res.json(populated);
     } else {
       res.status(404).json({ message: 'Incident not found' });
     }
@@ -157,26 +294,36 @@ const addTimelineUpdate = async (req, res) => {
       return res.status(400).json({ message: 'Update text is required' });
     }
 
-    const incident = await Incident.findById(req.params.id);
+    const incident = await Incident.findById(req.params.id).lean();
 
     if (incident) {
+      // Permission: admin | creator | assignedTo
+      const isCreator = !incident.createdBy || incident.createdBy.toString() === req.user._id.toString();
+      const isAssigned = incident.assignedTo && incident.assignedTo.toString() === req.user._id.toString();
+      if (req.user.role !== 'admin' && !isCreator && !isAssigned) {
+        return res.status(403).json({ message: 'Not authorized to post timeline updates' });
+      }
+
       const newUpdate = {
         update,
         author: req.user._id,
-        authorName: req.user.name
+        authorName: req.user.name,
+        timestamp: new Date()
       };
 
-      incident.timeline.push(newUpdate);
-      await incident.save();
+      // Native MongoDB driver — bypasses ALL Mongoose processing on old documents
+      await Incident.collection.updateOne(
+        { _id: incident._id },
+        { $push: { timeline: newUpdate } }
+      );
 
-      const savedUpdate = incident.timeline[incident.timeline.length - 1];
-      req.io.to(req.params.id).emit('timelineUpdate', savedUpdate);
-
-      res.status(201).json(incident);
+      req.io.to(req.params.id).emit('timelineUpdate', newUpdate);
+      res.status(201).json({ success: true, update: newUpdate });
     } else {
       res.status(404).json({ message: 'Incident not found' });
     }
   } catch (error) {
+    console.error('addTimelineUpdate error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -204,17 +351,12 @@ const generateSummary = async (req, res) => {
     }
 
     const apiKey = process.env.GEMINI_API_KEY?.trim();
-    console.log('GEMINI_API_KEY present:', !!apiKey);
-    console.log('GEMINI_API_KEY length:', apiKey?.length || 0);
-    
     if (!apiKey) {
-      console.error('GEMINI_API_KEY is not set or is empty');
       return res.status(500).json({ 
         message: 'Gemini API Key is missing in environment. Please check your .env file configuration.' 
       });
     }
 
-    console.log('Initializing GoogleGenerativeAI with API key...');
     const genAI = new GoogleGenerativeAI(apiKey);
 
     // Format timeline for AI
@@ -235,12 +377,10 @@ const generateSummary = async (req, res) => {
       Format the response as plain text with clear headings "Summary:" and "Root Cause:". Do not use markdown styling.
     `;
 
-    console.log('Making API call to Gemini...');
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const aiText = response.text();
-    console.log('API call successful, received response');
 
     const summaryMatch = aiText.match(/Summary:([\s\S]*?)Root Cause:/i);
     const rootCauseMatch = aiText.match(/Root Cause:([\s\S]*)/i);
@@ -255,68 +395,32 @@ const generateSummary = async (req, res) => {
 
     res.json(incident);
   } catch (error) {
-    console.error('AI Gen Error - Full Error:', error);
-    console.error('Error Status:', error.status);
-    console.error('Error Message:', error.message);
-    console.error('Error Stack:', error.stack);
+    console.error('AI Gen Error:', error.message);
     
     // Handle quota/rate limit errors - use fallback summary
     if (error.status === 429) {
-      console.log('Handling 429 quota error with fallback summary');
       const retryAfter = error.errorDetails?.find(d => d['@type']?.includes('RetryInfo'))?.retryDelay || '24 hours';
-      
-      // Generate fallback summary
-      const { summary, rootCause } = generateFallbackSummary(incident);
-      incident.aiSummary = summary;
-      incident.aiRootCause = rootCause;
-      await incident.save();
-
-      // Broadcast update
-      req.io.to(req.params.id).emit('incidentUpdated', incident);
-
-      return res.status(200).json({
-        incident,
+      return respondWithFallback(res, req, incident, {
         message: 'AI service quota exceeded. Generated summary with available data.',
         error: 'QUOTA_EXCEEDED',
         retryAfter: retryAfter,
-        usingFallback: true,
         details: 'The free tier limit for the Generative AI API has been reached. A basic summary was generated from available data. For a detailed analysis, please try again after the specified time or upgrade your plan.'
       });
     }
 
     // Handle other API errors - also use fallback
     if (error.status === 500 || error.status === 503) {
-      console.log('Handling API service error with fallback summary');
-      const { summary, rootCause } = generateFallbackSummary(incident);
-      incident.aiSummary = summary;
-      incident.aiRootCause = rootCause;
-      await incident.save();
-
-      req.io.to(req.params.id).emit('incidentUpdated', incident);
-
-      return res.status(200).json({
-        incident,
+      return respondWithFallback(res, req, incident, {
         message: 'AI service temporarily unavailable. Generated summary with available data.',
         error: 'SERVICE_UNAVAILABLE',
-        usingFallback: true
       });
     }
 
     // For any other error, log it and use fallback
-    console.log('Handling generic error with fallback summary');
     try {
-      const { summary, rootCause } = generateFallbackSummary(incident);
-      incident.aiSummary = summary;
-      incident.aiRootCause = rootCause;
-      await incident.save();
-
-      req.io.to(req.params.id).emit('incidentUpdated', incident);
-
-      return res.status(200).json({
-        incident,
+      return respondWithFallback(res, req, incident, {
         message: 'Failed to reach AI service. Generated summary with available data.',
         error: 'FALLBACK_GENERATED',
-        usingFallback: true,
         details: error.message
       });
     } catch (fallbackError) {
@@ -335,6 +439,7 @@ module.exports = {
   getIncidentById,
   createIncident,
   updateIncident,
+  assignUser,
   addTimelineUpdate,
   generateSummary
 };
