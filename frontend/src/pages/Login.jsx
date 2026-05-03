@@ -1,38 +1,40 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import useStore from '../store/useStore';
-import { TiltedCard } from '../components/TiltedCard';
-import { ShieldAlert } from 'lucide-react';
-import { apiUrl } from '../config/api';
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import useStore from "../store/useStore";
+import { TiltedCard } from "../components/TiltedCard";
+import { ShieldAlert } from "lucide-react";
+import { apiUrl } from "../config/api";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user, setUser } = useStore();
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(apiUrl('/api/auth/login'), { email, password });
+      const res = await axios.post(apiUrl("/api/auth/login"), {
+        email,
+        password,
+      });
       setUser(res.data);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
     <div className="flex flex-col md:flex-row min-h-[70vh] gap-8 items-center justify-center">
-
       {/* ── Left: TiltedCard visual panel (hidden on mobile) ── */}
       <div className="hidden md:flex flex-col items-center justify-center flex-1 gap-6 py-8">
         <TiltedCard
@@ -52,10 +54,10 @@ export default function Login() {
             <div
               className="m-4 px-4 py-3 flex items-center gap-2"
               style={{
-                backgroundColor: 'rgba(26,60,43,0.85)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: '4px',
-                border: '1px solid rgba(158,255,191,0.2)',
+                backgroundColor: "rgba(26,60,43,0.85)",
+                backdropFilter: "blur(8px)",
+                borderRadius: "4px",
+                border: "1px solid rgba(158,255,191,0.2)",
               }}
             >
               <ShieldAlert className="w-4 h-4 text-mint shrink-0" />
@@ -104,14 +106,16 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="••••••••"
+              placeholder="example123"
             />
           </div>
-          <button type="submit" className="btn-primary mt-2">Login</button>
+          <button type="submit" className="btn-primary mt-2">
+            Login
+          </button>
         </form>
 
         <div className="mt-6 font-mono text-sm text-grid/60">
-          Need an account?{' '}
+          Need an account?{" "}
           <Link to="/signup" className="text-forest font-bold hover:underline">
             Sign up
           </Link>
