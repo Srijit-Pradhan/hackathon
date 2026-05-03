@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feature/login-fix",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "feature/login-fix": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "feature/login-fix",
+    "origin"
+  ]
+}
