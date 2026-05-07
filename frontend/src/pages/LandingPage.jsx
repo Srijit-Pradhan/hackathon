@@ -44,18 +44,18 @@ export default function LandingPage() {
     <div className="min-h-screen bg-paper text-forest">
 
       {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
-      <section className="max-w-4xl mx-auto px-6 md:px-12 pt-24 pb-16 text-center lp-section">
+      <section className="max-w-4xl px-6 pt-24 pb-16 mx-auto text-center md:px-12 lp-section">
         {/* Status pill */}
         <div className="inline-flex items-center gap-2 px-3 py-1 border border-forest/15 font-mono text-[10px] uppercase tracking-widest text-forest/50 mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-mint inline-block animate-pulse" />
-          Live · Hackathon 2026
+          Live
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold leading-[1.05] tracking-tight mb-5">
           incident<span className="text-forest">IQ</span>
         </h1>
 
-        <p className="text-lg text-grid/65 max-w-xl mx-auto mb-10 leading-relaxed">
+        <p className="max-w-xl mx-auto mb-10 text-lg leading-relaxed text-grid/65">
           Monitor, manage and resolve incidents faster with AI-generated postmortems
           and real-time team collaboration.
         </p>
@@ -70,18 +70,18 @@ export default function LandingPage() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 justify-center">
-          <Link to="/dashboard" className="btn-primary flex items-center gap-2">
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-2 btn-primary">
             Open Dashboard <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link to="/status" className="flex items-center gap-2 px-5 py-3 border border-grid/20 font-mono text-xs uppercase tracking-widest text-grid/65 hover:border-forest/30 hover:text-forest transition-colors">
+          <Link to="/status" className="flex items-center gap-2 px-5 py-3 font-mono text-xs tracking-widest uppercase transition-colors border border-grid/20 text-grid/65 hover:border-forest/30 hover:text-forest">
             View Status Page
           </Link>
         </div>
       </section>
 
       {/* ══ PRODUCT PREVIEW (TiltedCard) ══════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-6 md:px-12 pb-20 lp-section" style={{ animationDelay: '0.08s' }}>
+      <section className="max-w-5xl px-6 pb-20 mx-auto md:px-12 lp-section" style={{ animationDelay: '0.08s' }}>
         {/* TiltedCard wrapping the dashboard preview screenshot */}
         <TiltedCard
           imageSrc="/dashboard-preview.png"
@@ -99,11 +99,11 @@ export default function LandingPage() {
           displayOverlayContent={true}
           overlayContent={
             <div
-              className="absolute bottom-4 left-4 right-4 flex items-center gap-2 px-3 py-2"
+              className="absolute flex items-center gap-2 px-3 py-2 bottom-4 left-4 right-4"
               style={{ background: 'rgba(26,60,43,0.7)', backdropFilter: 'blur(8px)' }}
             >
               <span className="w-2 h-2 rounded-full bg-mint" />
-              <span className="font-mono text-xs text-paper/80 uppercase tracking-widest">Live Dashboard · localhost:5173</span>
+              <span className="font-mono text-xs tracking-widest uppercase text-paper/80">Live Dashboard · localhost:5173</span>
             </div>
           }
         />
@@ -114,10 +114,10 @@ export default function LandingPage() {
 
       {/* ══ FEATURES (MagicBento) ══════════════════════════════════════════════ */}
       <section className="lp-section" style={{ animationDelay: '0.12s', background: '#1A3C2B' }}>
-        <div className="max-w-6xl mx-auto px-6 md:px-12 pt-16 pb-4">
+        <div className="max-w-6xl px-6 pt-16 pb-4 mx-auto md:px-12">
           <span className="font-mono text-[10px] uppercase tracking-widest text-paper/40 block mb-2">Platform Capabilities</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-paper mb-2">Everything you need</h2>
-          <p className="text-paper/50 text-sm mb-0">Built for speed, reliability, and team coordination.</p>
+          <h2 className="mb-2 text-3xl font-bold md:text-4xl text-paper">Everything you need</h2>
+          <p className="mb-0 text-sm text-paper/50">Built for speed, reliability, and team coordination.</p>
         </div>
         {/* MagicBento — already themed for forest bg */}
         <MagicBento
@@ -137,34 +137,34 @@ export default function LandingPage() {
 
       {/* ══ CRITICAL INCIDENT TEASER (GlowingEdgeCard) ════════════════════════ */}
       <section className="py-24 lp-section" style={{ animationDelay: '0.16s', background: '#F0F0ED' }}>
-        <div className="max-w-5xl mx-auto px-6 md:px-12">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-5xl px-6 mx-auto md:px-12">
+          <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <span className="font-mono text-[10px] uppercase tracking-widest text-forest/50 block mb-3">Critical Incidents</span>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Respond before it escalates</h2>
-              <p className="text-grid/65 leading-relaxed text-sm mb-6">
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Respond before it escalates</h2>
+              <p className="mb-6 text-sm leading-relaxed text-grid/65">
                 Critical incidents are highlighted with interactive glowing borders.
                 Hover over the card to see the effect — a visual cue that demands immediate attention.
               </p>
-              <Link to="/dashboard" className="btn-primary inline-flex items-center gap-2">
+              <Link to="/dashboard" className="inline-flex items-center gap-2 btn-primary">
                 View Active Incidents <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
             {/* GlowingEdgeCard as a teaser UI preview */}
             <GlowingEdgeCard mode="light" className="h-64">
-              <div className="p-6 flex flex-col justify-between h-full" style={{ color: '#1A3C2B' }}>
+              <div className="flex flex-col justify-between h-full p-6" style={{ color: '#1A3C2B' }}>
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-forest/50">Critical · Production</span>
                     <span className="w-2 h-2 rounded-full bg-coral animate-pulse" />
                   </div>
-                  <h3 className="text-xl font-bold mb-1">API Gateway Down</h3>
-                  <p className="text-sm text-grid/60 leading-relaxed">
+                  <h3 className="mb-1 text-xl font-bold">API Gateway Down</h3>
+                  <p className="text-sm leading-relaxed text-grid/60">
                     All API requests returning 503. 3 services affected. P0 incident declared.
                   </p>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-forest/10">
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-forest/10">
                   <span className="font-mono text-xs text-grid/50">Opened 4m ago</span>
                   <span className="font-mono text-xs text-coral border border-coral/30 px-2 py-0.5">CRITICAL</span>
                 </div>
@@ -176,16 +176,16 @@ export default function LandingPage() {
 
       {/* ══ HOW IT WORKS (AnimatedStepper — interactive demo) ════════════════ */}
       <section className="py-20 lp-section" style={{ animationDelay: '0.2s' }}>
-        <div className="max-w-4xl mx-auto px-6 md:px-12">
-          <div className="text-center mb-12">
+        <div className="max-w-4xl px-6 mx-auto md:px-12">
+          <div className="mb-12 text-center">
             <span className="font-mono text-[10px] uppercase tracking-widest text-forest/50 block mb-3">Process</span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">How it works</h2>
-            <p className="text-grid/55 text-sm">Click through the steps to see the incident lifecycle.</p>
+            <h2 className="mb-3 text-3xl font-bold md:text-4xl">How it works</h2>
+            <p className="text-sm text-grid/55">Click through the steps to see the incident lifecycle.</p>
           </div>
         </div>
 
         {/* AnimatedStepper as a live demo */}
-        <div className="max-w-2xl mx-auto px-6">
+        <div className="max-w-2xl px-6 mx-auto">
           <AnimatedStepper
             nextButtonText="Next Step →"
             backButtonText="← Back"
@@ -194,71 +194,71 @@ export default function LandingPage() {
             stepCircleContainerClassName="border-forest/10"
           >
             <Step title="1 · Create Incident">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 Log a new incident with title, description, and severity level.
                 Example: Payment API Failure.
               </p>
-              <div className="p-4 border border-forest/10 bg-forest/3 font-mono text-xs text-grid/60">
+              <div className="p-4 font-mono text-xs border border-forest/10 bg-forest/3 text-grid/60">
                 <span className="text-forest">POST</span> /api/incidents → <span className="text-mint">201 Created</span>
               </div>
             </Step>
 
             <Step title="2 · Assign Responder">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 Assign team members to take responsibility. A timeline update is instantly broadcasted.
                 No confusion on who is investigating.
               </p>
-              <div className="p-4 border border-gold/20 bg-gold/5 text-xs font-mono text-grid/70">
+              <div className="p-4 font-mono text-xs border border-gold/20 bg-gold/5 text-grid/70">
                 <span className="text-gold">●</span> Assigned to Srijit (Backend Team)
               </div>
             </Step>
 
             <Step title="3 · Investigate">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 Team posts live timeline updates while debugging. The system builds a real-time timeline
                 so everyone stays on the same page.
               </p>
-              <div className="p-4 border border-grid/20 bg-paper text-xs font-mono text-grid/70">
+              <div className="p-4 font-mono text-xs border border-grid/20 bg-paper text-grid/70">
                 <span className="text-forest">●</span> Investigating payment service logs...
               </div>
             </Step>
 
             <Step title="4 · AI Summary">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 Click a button and AI analyzes the timeline to provide a quick summary and probable root cause.
                 No need to read all logs manually.
               </p>
-              <div className="p-4 border border-forest/15 bg-forest/4 text-xs font-mono text-grid/60">
+              <div className="p-4 font-mono text-xs border border-forest/15 bg-forest/4 text-grid/60">
                 <span className="text-forest">✦</span> Root Cause: DB connection timeout due to traffic spike
               </div>
             </Step>
 
             <Step title="5 · Resolve Incident">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 Once the fix is applied (e.g. optimized queries + scaling), change the status to Resolved.
                 Timeline reflects the resolution.
               </p>
-              <div className="p-4 border border-mint/20 bg-mint/5 text-xs font-mono text-grid/70">
+              <div className="p-4 font-mono text-xs border border-mint/20 bg-mint/5 text-grid/70">
                 <span className="text-mint">✓</span> Incident resolved · System stable
               </div>
             </Step>
 
             <Step title="6 · Postmortem">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 System provides a complete AI-generated postmortem with summary, root cause, and
                 steps taken, ready to be reviewed to prevent future issues.
               </p>
-              <div className="p-4 border border-forest/15 bg-forest/4 text-xs font-mono text-grid/60">
+              <div className="p-4 font-mono text-xs border border-forest/15 bg-forest/4 text-grid/60">
                 <span className="text-forest">✦</span> Postmortem generated successfully
               </div>
             </Step>
 
             <Step title="7 · Status Page">
-              <p className="text-sm leading-relaxed mb-4">
+              <p className="mb-4 text-sm leading-relaxed">
                 Stakeholders check the public status page to see transparent updates.
                 Builds trust and keeps users informed of system health.
               </p>
-              <div className="p-4 border border-mint/20 bg-mint/5 text-xs font-mono text-grid/70">
+              <div className="p-4 font-mono text-xs border border-mint/20 bg-mint/5 text-grid/70">
                 <span className="text-mint">✓</span> All Systems Operational
               </div>
             </Step>
@@ -267,10 +267,10 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FINAL CTA (GenerateButton) ════════════════════════════════════════ */}
-      <section className="border-t border-grid/10 py-24 text-center lp-section" style={{ animationDelay: '0.24s' }}>
-        <div className="max-w-lg mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to respond faster?</h2>
-          <p className="text-grid/55 mb-10 text-sm leading-relaxed">
+      <section className="py-24 text-center border-t border-grid/10 lp-section" style={{ animationDelay: '0.24s' }}>
+        <div className="max-w-lg px-6 mx-auto">
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready to respond faster?</h2>
+          <p className="mb-10 text-sm leading-relaxed text-grid/55">
             Set up your incident command center in minutes.
           </p>
 
@@ -292,7 +292,7 @@ export default function LandingPage() {
 
       {/* ══ FOOTER (matches Layout footer) ════════════════════════════════ */}
       <footer className="border-t border-grid/20 py-6 text-center font-mono text-[10px] uppercase tracking-widest text-grid/60">
-        incidentIQ • Hackathon 2026
+        &copy; incidentIQ. All rights reserved.
       </footer>
 
       {/* Subtle fade-in for each section */}
